@@ -33,6 +33,18 @@ JSON の `summary`（なければ `content`）を Azure OpenAI Embeddings でベ
 6. `050_create_index.py`
 Azure AI Search のインデックス作成とドキュメント投入。
 
+## フロー図
+```mermaid
+flowchart TD
+	A[入力PDF<br/>project_dir/pdf] --> B[000_PDF_CUT.py<br/>ページ単位PDFに分割]
+	B --> C[010_CU_by_page_to_md.py<br/>CUでレイアウト解析 + 図版説明生成]
+	C --> D[020_md_to_json.py<br/>タイトル/要約/キーワード抽出してJSON化]
+	D --> E[030_json_add_vector.py<br/>Embeddingsでベクトル付与]
+	E --> F[040_merge_vector_json.py<br/>vector_jsonを1つにマージ]
+	F --> G[050_create_index.py<br/>AI Searchインデックス作成 + 文書投入]
+	G --> H[検索可能なナレッジベース]
+```
+
 ## 事前に必要な Azure サービス（.env から推定）
 `.env` とコードから、以下の Azure サービスが前提です。
 
