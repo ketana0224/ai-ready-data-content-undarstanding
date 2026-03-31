@@ -1,0 +1,17 @@
+# Microsoft Foundry クイック スタート
+# https://learn.microsoft.com/ja-jp/azure/ai-foundry/quickstarts/get-started-code?view=foundry&tabs=azure-ai-foundry%2Cpython2
+python-dotenv
+azure-ai-contentunderstanding
+azure-identity
+openai
+pandas
+
+# PDF
+PyMuPDF
+
+# Image
+Pillow
+
+# AI Search
+azure-search-documents
+

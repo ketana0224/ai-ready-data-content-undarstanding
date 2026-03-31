@@ -1,0 +1,35 @@
+# Python cache/artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+
+# Environment files (contains secrets)
+.env
+.env.*
+!.env.sample
+!.env.example
+
+# Tooling/cache
+.pytest_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# OS/editor
+.DS_Store
+Thumbs.db
+
+# Pipeline-generated data folders (under project directories)
+project_*/pdf_cut/
+project_*/cu_md/
+project_*/md_json/
+project_*/vector_json/
+project_*/merged_vector_json/
+
+# Keep all files under project_test tracked
+!project_test/
+!project_test/**
