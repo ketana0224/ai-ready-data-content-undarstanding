@@ -74,7 +74,7 @@ def merge_vector_json_files(input_folder, output_file):
 
 if __name__ == "__main__":
     BASE_DIR = Path(__file__).resolve().parent
-    IN_DIR = BASE_DIR / PROJECT_DIR / "vector_json"
+    IN_DIR = BASE_DIR / PROJECT_DIR / "overlap_json"
     OUT_DIR = BASE_DIR / PROJECT_DIR / "merged_vector_json"
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     output_file = OUT_DIR / "vector.json"

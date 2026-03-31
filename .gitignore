@@ -30,6 +30,9 @@ project_*/md_json/
 project_*/vector_json/
 project_*/merged_vector_json/
 
+# Ignore all files under project_ir
+project_ir/
+
 # Keep all files under project_test tracked
 !project_test/
 !project_test/**
