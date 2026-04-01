@@ -33,6 +33,7 @@ Markdown を生成するサンプルスクリプト。
 
 import sys
 import json
+import logging
 import os
 import re
 import base64
@@ -74,15 +75,17 @@ def build_vision_client(credential: DefaultAzureCredential):
         raise RuntimeError("AZURE_OPENAI_MODEL is not set.")
 
     token_provider = get_bearer_token_provider(credential, "https://cognitiveservices.azure.com/.default")
-    client = OpenAI(base_url=endpoint, api_key=token_provider)
+    client = OpenAI(base_url=endpoint, api_key=token_provider())
     return client, deployment
 
 
 def describe_figure(client: OpenAI, model: str, image_path: Path) -> str:
     vision_prompt = """画像を出来る限り詳しく分かりやすく説明してください。
 ロゴと考えられる場合は会社名や組織を推測して、その名前と「ロゴ」とのみ出力してください。
-この図版の内容を日本語で3-5文で要約してください。数値や軸、凡例、主メッセージを優先してください。
-もしこの図版が何らかのプロセスやフローを表している場合は、そのプロセスの内容を説明してください。また加えてmermaid記法でフロー図を出力してください。"""
+この図版の内容を日本語で5文から10文以内で要約してください。数値や軸、凡例、主メッセージを優先してください。
+この図版が何らかのプロセスやフローを表している場合は、そのプロセスの内容を説明してください。また加えてmermaid記法でフロー図を出力してください。
+この図版が何らかのチャートを表している場合は、そのチャートの内容を説明してください。また加えてHTML記法で表を出力してください。"""
+
 
     img_b64 = base64.b64encode(image_path.read_bytes()).decode("ascii")
     resp = client.chat.completions.create(
@@ -155,8 +158,10 @@ def main() -> None:
         raise RuntimeError("PROJECT_DIR is not set.")
 
     # Insert the following configurations.
-    # 1) AZURE_CONTENT_UNDERSTANDING_ENDPOINT - the endpoint to your Content Understanding resource.
-    endpoint = os.getenv("AZURE_CONTENT_UNDERSTANDING_ENDPOINT", "https://ketana-ext-new-aif.services.ai.azure.com/")
+    # 1) MICROSOFT_FOUNDRY_ENDPOINT - the endpoint to your Content Understanding resource.
+    endpoint = os.getenv("MICROSOFT_FOUNDRY_ENDPOINT", "").strip()
+    if not endpoint:
+        raise RuntimeError("MICROSOFT_FOUNDRY_ENDPOINT is not set.")
 
     # 3) Local PDF files to analyze
     base_dir = Path(__file__).resolve().parent
@@ -182,6 +187,16 @@ def main() -> None:
 
     out_dir = base_dir / project_dir / "cu_md"
     out_dir.mkdir(parents=True, exist_ok=True)
+
+    # ログファイルの設定
+    log_file = base_dir / project_dir / "010_error.log"
+    logging.basicConfig(
+        filename=str(log_file),
+        level=logging.ERROR,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+        encoding="utf-8",
+    )
+
     print(f"Found {len(target_pdfs)} PDF files in: {pdf_dir}")
 
     for idx, target_pdf in enumerate(target_pdfs, start=1):
@@ -209,10 +224,14 @@ def main() -> None:
             )
             result: AnalysisResult = poller.result()
         except AzureError as err:
-            print(f"[Azure Error] {target_pdf.name}: {err.message}")
+            msg = f"[Azure Error] {target_pdf.name}: {err.message}"
+            print(msg)
+            logging.error(msg)
             continue
         except Exception as ex:
-            print(f"[Unexpected Error] {target_pdf.name}: {ex}")
+            msg = f"[Unexpected Error] {target_pdf.name}: {ex}"
+            print(msg)
+            logging.error(msg)
             continue
 
         result_dict = result.as_dict()
@@ -225,7 +244,9 @@ def main() -> None:
                 credential=credential,
             )
         except Exception as ex:
-            print(f"[Figure Description Error] {target_pdf.name}: {ex}")
+            msg = f"[Figure Description Error] {target_pdf.name}: {ex}"
+            print(msg)
+            logging.error(msg)
             enriched_markdown = ""
             figure_details = []
 

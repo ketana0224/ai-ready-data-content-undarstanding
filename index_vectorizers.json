@@ -1,0 +1,157 @@
+{
+    "fields": [
+        {
+            "name": "id",
+            "type": "Edm.String",
+            "key": true,
+            "searchable": true,
+            "filterable": false,
+            "sortable": false,
+            "facetable": false,
+            "analyzer": "keyword"
+        },
+        {
+            "name": "fileName",
+            "type": "Edm.String",
+            "searchable": true,
+            "filterable": true,
+            "sortable": false,
+            "facetable": true
+        },
+        {
+            "name": "filter",
+            "type": "Edm.String",
+            "searchable": true,
+            "filterable": true,
+            "sortable": false,
+            "facetable": true,
+            "analyzer": "ja.lucene"
+        },
+        {
+            "name": "sub_filter",
+            "type": "Edm.String",
+            "searchable": true,
+            "filterable": true,
+            "sortable": false,
+            "facetable": true,
+            "analyzer": "ja.lucene"
+        },
+        {
+            "name": "page",
+            "type": "Edm.Int32",
+            "searchable": false,
+            "filterable": true,
+            "sortable": true,
+            "facetable": false
+        },
+        {
+            "name": "content",
+            "type": "Edm.String",
+            "searchable": true,
+            "filterable": false,
+            "sortable": false,
+            "facetable": false,
+            "analyzer": "ja.lucene"
+        },
+        {
+            "name": "title",
+            "type": "Edm.String",
+            "searchable": true,
+            "filterable": false,
+            "sortable": false,
+            "facetable": false,
+            "analyzer": "ja.lucene"
+        },
+        {
+            "name": "summary",
+            "type": "Edm.String",
+            "searchable": true,
+            "filterable": false,
+            "sortable": false,
+            "facetable": false,
+            "analyzer": "ja.lucene"
+        },
+        {
+            "name": "keywords",
+            "type": "Collection(Edm.String)",
+            "searchable": true,
+            "filterable": true,
+            "sortable": false,
+            "facetable": true,
+            "analyzer": "ja.lucene"
+        },
+        {
+            "name": "contentVector",
+            "type": "Collection(Edm.Single)",
+            "searchable": true,
+            "dimensions": 3072,
+            "vectorSearchProfile": "vectorProfile"
+        }
+    ],
+    "semantic": {
+        "defaultConfiguration": "semanticConfig",
+        "configurations": [
+            {
+                "name": "semanticConfig",
+                "prioritizedFields": {
+                    "titleField": {
+                        "fieldName": "title"
+                    },
+                    "prioritizedContentFields": [
+                        {
+                            "fieldName": "content"
+                        }
+                    ],
+                    "prioritizedKeywordsFields": [
+                        {
+                            "fieldName": "keywords"
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "vectorSearch": {
+        "algorithms": [
+            {
+                "name": "hnsw",
+                "kind": "hnsw",
+                "hnswParameters": {
+                    "m": 4,
+                    "efConstruction": 400,
+                    "efSearch": 500,
+                    "metric": "cosine"
+                }
+            }
+        ],
+        "vectorizers": [
+            {
+            "name": "aoai-embedder",
+            "kind": "azureOpenAI",
+            "azureOpenAIParameters": {
+                "resourceUri": "https://aif-ketana-prod-eastus2.openai.azure.com",
+                "deploymentId": "text-embedding-3-large",
+                "modelName": "text-embedding-3-large"
+            }
+            }
+        ],
+        "profiles": [
+            {
+                "name": "vectorProfile",
+                "algorithm": "hnsw",
+                "vectorizer": "aoai-embedder"
+            }
+        ]
+    },
+    "corsOptions": {
+        "allowedOrigins": [
+            "*"
+        ],
+        "maxAgeInSeconds": 300
+    },
+    "similarity": {
+        "@odata.type": "#Microsoft.Azure.Search.BM25Similarity",
+        "k1": 1.2,
+        "b": 0.75
+    }
+}

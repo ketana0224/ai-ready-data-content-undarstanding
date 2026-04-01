@@ -98,7 +98,7 @@ def add_documents(index_name, docs):
 if __name__ == "__main__":
     BASE_DIR = Path(__file__).resolve().parent
     VECTOR_JSON_DIR = BASE_DIR / PROJECT_DIR / "merged_vector_json"
-    index_def_path = Path.cwd() / "index.json"
+    index_def_path = Path.cwd() / "index_vectorizers.json"
     index_name = os.getenv("AI_SEARCH_INDEX_NAME")
     if not index_name:
         print("エラー: AI_SEARCH_INDEX_NAME が .env に設定されていません")
