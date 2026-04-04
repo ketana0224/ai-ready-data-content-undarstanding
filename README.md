@@ -57,19 +57,19 @@ flowchart TD
 ## 事前に必要な Azure サービス（.env から推定）
 `.env` とコードから、以下の Azure サービスが前提です。
 
-- Azure OpenAI
-	- 用途: 図版説明生成、要約/抽出、埋め込みベクトル生成
-	- 関連設定: `AZURE_OPENAI_API_ENDPOINT`, `AZURE_OPENAI_MODEL`, `AZURE_OPENAI_EMBED_MODEL`, `FILTER_MODEL_DEPLOYMENT`
-	- 補足: Microsoft Foundry のプロジェクト作成時に Azure OpenAI リソースを関連付けて作成/接続できる
-	- 必要モデル（本リポジトリ想定）:
-		- `AZURE_OPENAI_MODEL`: `gpt-5.4`（要約・抽出など）
-		- `FILTER_MODEL_DEPLOYMENT`: `gpt-5.4-nano`（フィルター抽出）
-		- `AZURE_OPENAI_EMBED_MODEL`: `text-embedding-3-large`（埋め込み）
-
-- Azure Content Understanding
-	- 用途: 分割済み PDF のレイアウト解析
-	- 関連設定: `AZURE_CONTENT_UNDERSTANDING_ENDPOINT`（コード内で参照）
-	- 補足: Microsoft Foundry のプロジェクト作成時に Content Understanding リソースを関連付けて利用できる
+- Microsoft Foundry
+	- 用途: AI アプリ基盤。Azure OpenAI と Azure Content Understanding を配下サービスとして利用
+	- 関連設定: `MICROSOFT_FOUNDRY_ENDPOINT`
+	- Azure OpenAI
+		- 用途: 図版説明生成、要約/抽出、埋め込みベクトル生成
+		- 関連設定: `AZURE_OPENAI_API_ENDPOINT`, `AZURE_OPENAI_MODEL`, `AZURE_OPENAI_EMBED_MODEL`, `FILTER_MODEL_DEPLOYMENT`
+		- 必要モデル（本リポジトリ想定）:
+			- `AZURE_OPENAI_MODEL`: `gpt-5.4`（要約・抽出など）
+			- `FILTER_MODEL_DEPLOYMENT`: `gpt-5.4-nano`（フィルター抽出）
+			- `AZURE_OPENAI_EMBED_MODEL`: `text-embedding-3-large`（埋め込み）
+	- Azure Content Understanding
+		- 用途: 分割済み PDF のレイアウト解析
+		- 関連設定: `MICROSOFT_FOUNDRY_ENDPOINT`
 
 - Azure AI Search
 	- 用途: インデックス作成・ドキュメント登録
