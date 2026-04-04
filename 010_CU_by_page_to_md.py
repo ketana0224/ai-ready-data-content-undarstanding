@@ -37,6 +37,7 @@ import logging
 import os
 import re
 import base64
+import atexit
 from pathlib import Path
 
 from azure.ai.contentunderstanding import ContentUnderstandingClient
@@ -47,6 +48,21 @@ from openai import OpenAI
 from dotenv import load_dotenv
 
 from _common.polygon_cut import crop_image_from_file
+
+
+class Tee:
+    """Write to multiple streams at once (console + log file)."""
+
+    def __init__(self, *streams):
+        self.streams = streams
+
+    def write(self, data):
+        for stream in self.streams:
+            stream.write(data)
+
+    def flush(self):
+        for stream in self.streams:
+            stream.flush()
 
 
 def parse_source_to_page_bbox(source: str):
@@ -157,6 +173,13 @@ def main() -> None:
     if not project_dir:
         raise RuntimeError("PROJECT_DIR is not set.")
 
+    base_dir = Path(__file__).resolve().parent
+    output_log_file = base_dir / "Log_010_CU_by_page_to_md.txt"
+    output_log_handle = output_log_file.open("a", encoding="utf-8")
+    atexit.register(output_log_handle.close)
+    sys.stdout = Tee(sys.__stdout__, output_log_handle)
+    sys.stderr = Tee(sys.__stderr__, output_log_handle)
+
     # Insert the following configurations.
     # 1) MICROSOFT_FOUNDRY_ENDPOINT - the endpoint to your Content Understanding resource.
     endpoint = os.getenv("MICROSOFT_FOUNDRY_ENDPOINT", "").strip()
@@ -164,7 +187,6 @@ def main() -> None:
         raise RuntimeError("MICROSOFT_FOUNDRY_ENDPOINT is not set.")
 
     # 3) Local PDF files to analyze
-    base_dir = Path(__file__).resolve().parent
     pdf_dir = base_dir / project_dir / "pdf_cut"
     if not pdf_dir.exists():
         print(f"[Error] PDF folder not found: {pdf_dir}")
@@ -189,7 +211,7 @@ def main() -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # ログファイルの設定
-    log_file = base_dir / project_dir / "010_error.log"
+    log_file = output_log_file
     logging.basicConfig(
         filename=str(log_file),
         level=logging.ERROR,

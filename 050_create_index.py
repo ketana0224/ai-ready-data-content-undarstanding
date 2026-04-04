@@ -3,12 +3,19 @@
 
 - 入力:
     - PROJECT_DIR 配下の merged_vector_json/vector.json（投入対象ドキュメント）
-    - index.json（インデックス定義）
-    - 環境変数 AI_SEARCH_ENDPOINT / AI_SEARCH_INDEX_NAME / PROJECT_DIR
+    - index_vectorizers.json（インデックス定義。${ENV_NAME} 形式のプレースホルダー対応）
+    - .env（このスクリプトと同じディレクトリから読み込み。既存環境変数を上書き）
+    - 主な環境変数:
+        - PROJECT_DIR
+        - AI_SEARCH_ENDPOINT
+        - AI_SEARCH_INDEX_NAME
+        - AI_SEARCH_API_VERSION（省略時はデフォルト値を使用）
+        - index_vectorizers.json 内で参照する環境変数
+          例: MICROSOFT_FOUNDRY_ENDPOINT / AZURE_OPENAI_EMBED_MODEL
 - 主処理:
     1) Entra 認証で Azure AI Search に接続
     2) 既存インデックスの存在確認と削除（存在する場合）
-    3) index.json からインデックスを作成
+    3) index_vectorizers.json のプレースホルダーを環境変数で解決し、インデックスを作成
     4) vector.json からドキュメントを読み込み、バッチでアップロード
 - 出力:
     - 指定インデックスへのドキュメント登録
@@ -20,6 +27,8 @@
 import json
 import os
 import hashlib
+import re
+from typing import Any
 from pathlib import Path
 import requests
 from azure.core.exceptions import ResourceNotFoundError
@@ -30,7 +39,8 @@ from azure.search.documents.indexes import SearchIndexClient
 from dotenv import load_dotenv  
 
 # 環境変数を読み込む  
-load_dotenv() 
+BASE_DIR = Path(__file__).resolve().parent
+load_dotenv(dotenv_path=BASE_DIR / ".env", override=True)
 
 
 PROJECT_DIR = os.getenv("PROJECT_DIR", "").strip()
@@ -65,9 +75,33 @@ def delete_index(name):
     index_client.delete_index(name)
 
 # インデックスを作成する
+ENV_PLACEHOLDER_PATTERN = re.compile(r"\$\{([A-Z0-9_]+)\}")
+
+
+def resolve_env_placeholders(value):
+    if isinstance(value, dict):
+        return {k: resolve_env_placeholders(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [resolve_env_placeholders(v) for v in value]
+    if isinstance(value, str):
+        def replacer(match):
+            env_name = match.group(1)
+            env_val = os.getenv(env_name, "").strip()
+            if not env_val:
+                raise RuntimeError(f"Environment variable '{env_name}' is required by index definition.")
+            return env_val
+
+        return ENV_PLACEHOLDER_PATTERN.sub(replacer, value)
+    return value
+
+
 def create_index(name, json_file_path):
     with open(json_file_path, "r", encoding='utf-8') as f:
-        data = json.load(f)
+        data: Any = json.load(f)
+
+    data = resolve_env_placeholders(data)
+    if not isinstance(data, dict):
+        raise RuntimeError("index definition must be a JSON object.")
     
     # インデックス名を設定
     data["name"] = name
@@ -96,7 +130,6 @@ def add_documents(index_name, docs):
 
 
 if __name__ == "__main__":
-    BASE_DIR = Path(__file__).resolve().parent
     VECTOR_JSON_DIR = BASE_DIR / PROJECT_DIR / "merged_vector_json"
     index_def_path = Path.cwd() / "index_vectorizers.json"
     index_name = os.getenv("AI_SEARCH_INDEX_NAME")
