@@ -93,4 +93,5 @@ pip install -r requirements.txt
 ```
 
 3. `.env` を設定（少なくとも `PROJECT_DIR` と各 Azure 接続設定）
-4. 連番スクリプトを `000` から `050` まで順番に実行
+4. `PROJECT_DIR` を作り、配下に `pdf` フォルダを作成し、対象 PDF を格納
+5. 連番スクリプトを `000` から `050` まで順番に実行
